@@ -17,7 +17,7 @@ on:
       helm-release-name:
         default: todoapp
         type: string
-      artifact_choice:
+      artifact_matrix:
         default: 'ubuntu-latest-3.9'
         type: string
         required: true
