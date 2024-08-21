@@ -1,20 +1,35 @@
 name: python-deployment
 
-run-name: ${{ github.actor }} - ${{ github.ref_name}} -${{ github.sha }}
+run-name: ${{ github.actor }} - ${{ github.ref_name}} - ${{ github.sha }}
 
 on:
   push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'OS to deploy to'
+        required: true
+        type: choice
+        options: ['windows-latest-3.8', 'windows-latest-3.9', 'ubuntu-latest-3.8', 'ubuntu-latest-3.9']
 
 env:
-  PythonVersion: 3.8
+  # PythonVersion: 3.8
   DockerImageName: todoapp
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   python-ci:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        PythonVersion: [3.8, 3.9]
+        OsVersion: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.OsVersion }}
     defaults:
       run:
         working-directory: ./src
@@ -22,10 +37,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python ${{ env.PythonVersion }}
+      - name: Set up Python ${{ matrix.PythonVersion }}
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ env.PythonVersion }}
+          python-version: ${{ matrix.PythonVersion }}
 
       - name: Install dependencies
         run: |
